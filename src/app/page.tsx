@@ -5,7 +5,11 @@ import PdfUploader from "@/components/PdfUploader";
 import { Worker, Viewer } from "@react-pdf-viewer/core";
 import "@react-pdf-viewer/core/lib/styles/index.css";
 
+import * as pdfjsLib from "pdfjs-dist/build/pdf";
+import pdfWorker from "pdfjs-dist/build/pdf.worker.entry";
 
+// ✅ pdf.js의 worker 경로 설정
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 const translations: Record<string, { 
   errorTranslation: string; 
