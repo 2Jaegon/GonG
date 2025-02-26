@@ -5,7 +5,18 @@ import PdfUploader from "@/components/PdfUploader";
 import { Worker, Viewer } from "@react-pdf-viewer/core";
 import "@react-pdf-viewer/core/lib/styles/index.css";
 
-const translations = {
+
+
+const translations: Record<string, { 
+  errorTranslation: string; 
+  networkError: string; 
+  defaultTranslation: string; 
+  selectText: string; 
+  dragText: string; 
+  translatedText: string; 
+  translating: string; 
+  translateButton: string; 
+}> = {
   KO: {
     errorTranslation: "번역 실패",
     networkError: "번역 실패: 네트워크 오류",
@@ -84,10 +95,10 @@ export default function Home() {
   const [translatedText, setTranslatedText] = useState<string>("");
   const [targetLang, setTargetLang] = useState<string>("KO");
   const [loading, setLoading] = useState<boolean>(false);
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  // const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
   const handleUpload = (file: File) => {
-    setUploadedFile(file);
+    // setUploadedFile(file);
     setPdfUrl(URL.createObjectURL(file));
   };
 
@@ -108,12 +119,13 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ text: selectedText, targetLang }),
       });
-
+    
       const data = await response.json();
       setTranslatedText(data.translation || translations[targetLang].errorTranslation);
     } catch (error) {
+      console.error(error);  // ✅ ESLint 오류 방지
       setTranslatedText(translations[targetLang].networkError);
-    }
+    }    
     setLoading(false);
   };
 

@@ -2,32 +2,33 @@ import type { NextApiRequest, NextApiResponse } from "next";
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+    return res.status(405).json({ error: "Method Not Allowed" });
   }
 
   const { text, targetLang } = req.body;
-  const apiKey = process.env.NEXT_PUBLIC_DEEPL_API_KEY;
 
   if (!text || !targetLang) {
-    return res.status(400).json({ error: "텍스트 또는 번역 언어가 제공되지 않았습니다." });
+    return res.status(400).json({ error: "Missing text or target language" });
   }
 
   try {
-    const response = await fetch("https://api-free.deepl.com/v2/translate", {
+    const response = await fetch("https://api.deepl.com/v2/translate", {
       method: "POST",
       headers: {
-        "Authorization": `DeepL-Auth-Key ${apiKey}`,
+        "Authorization": `DeepL-Auth-Key ${process.env.DEEPL_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         text: [text],
-        target_lang: targetLang.toUpperCase(),
+        target_lang: targetLang,
       }),
     });
 
     const data = await response.json();
-    res.status(200).json({ translation: data.translations[0].text });
+    return res.status(200).json({ translation: data.translations[0].text });
+
   } catch (error) {
-    res.status(500).json({ error: "번역 요청 실패" });
+    console.error(error);  // ✅ ESLint 오류 방지
+    return res.status(500).json({ error: "Translation failed" });
   }
 }
