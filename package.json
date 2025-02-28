@@ -9,6 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@paypal/react-paypal-js": "^8.8.2",
     "@react-pdf-viewer/core": "^3.12.0",
     "canvas": "^3.1.0",
     "firebase": "^11.4.0",

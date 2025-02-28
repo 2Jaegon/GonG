@@ -6,6 +6,11 @@ import { onAuthStateChanged, signOut, signInWithPopup, GoogleAuthProvider } from
 import PdfUploader from "@/components/PdfUploader";
 import { Worker, Viewer } from "@react-pdf-viewer/core";
 import "@react-pdf-viewer/core/lib/styles/index.css";
+import ProfileMenu from "@/components/ProfileMenu";
+
+// ✅ Firestore에서 구독 상태 가져오기 위한 추가 코드
+import { db } from "@/lib/firebase";
+import { doc, getDoc } from "firebase/firestore";
 
 import * as pdfjsLib from "pdfjs-dist";
 import pdfWorker from "pdfjs-dist/build/pdf.worker.entry";
@@ -103,11 +108,21 @@ export default function Home() {
   const [targetLang, setTargetLang] = useState<string>("KO");
   const [loading, setLoading] = useState<boolean>(false);
   const [dropdownOpen, setDropdownOpen] = useState<boolean>(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string>("free"); // ✅ 구독 상태 추가
+
 
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       setUser(currentUser);
+
+      // ✅ 로그인된 경우 Firestore에서 구독 상태 확인
+      if (currentUser) {
+        const userDoc = await getDoc(doc(db, "users", currentUser.uid));
+        if (userDoc.exists()) {
+          setSubscriptionStatus(userDoc.data().subscriptionStatus || "free");
+        }
+      }
     });
 
     return () => unsubscribe();
@@ -186,65 +201,7 @@ export default function Home() {
 
 
   return (
-    <div style={{ display: "flex", height: "100vh", backgroundColor: "#121212", color: "#ffffff" }}>
-    {/* 우측 상단 프로필 아이콘 */}
-    <div style={{ position: "absolute", top: "6px", right: "6px", cursor: "pointer" }}>
-      <div
-        onClick={() => setDropdownOpen(!dropdownOpen)}
-        style={{
-          width: "26px",
-          height: "26px",
-          borderRadius: "50%",
-          backgroundColor: "#00c3ff",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          fontSize: "10px",
-          fontWeight: "bold",
-          color: "white",
-        }}
-      >
-        {user.displayName ? user.displayName[0].toUpperCase() : "U"}
-      </div>
-
-      {/* 프로필 드롭다운 (로그아웃 포함) */}
-    {dropdownOpen && (
-      <div
-        style={{
-          position: "absolute",
-          top: "50px",
-          right: "10px",
-          backgroundColor: "#1e1e1e",
-          padding: "10px",
-          borderRadius: "8px",
-          boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
-          zIndex: 1000,  // ✅ PDF 뷰어보다 위로 설정
-        }}
-      >
-        <p style={{ color: "white", marginBottom: "5px" }}>
-          {user?.displayName || "사용자"}
-        </p>
-        <p style={{ color: "gray", fontSize: "12px", marginBottom: "10px" }}>
-          {user?.email}
-        </p>
-        <button
-          onClick={() => signOut(auth)}
-          style={{
-            backgroundColor: "#ff4b4b",
-            color: "#fff",
-            border: "none",
-            borderRadius: "5px",
-            padding: "5px 10px",
-            cursor: "pointer",
-            width: "100%",
-          }}
-        >
-          로그아웃
-        </button>
-      </div>
-    )}
-    </div>
-  
+    <div style={{ display: "flex", height: "100vh", backgroundColor: "#121212", color: "#ffffff" }}>  
       {/* 왼쪽 UI */}
       <div
         style={{
@@ -261,6 +218,9 @@ export default function Home() {
       >
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "20px" }}>
           <h2 style={{ fontSize: "18px", fontWeight: "bold", color: "#00c3ff" }}>Gon.G</h2>
+          {/* ✅ ProfileMenu에 subscriptionStatus 전달 */}
+          <ProfileMenu user={user} subscriptionStatus={subscriptionStatus} />
+
           <select
             style={{
               padding: "5px",
